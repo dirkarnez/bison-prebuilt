@@ -40,7 +40,7 @@ jobs:
         shell: msys2 {0}
         run: |
             export PATH="${{ github.workspace }}/mingw64:${{ github.workspace }}/mingw64/bin:${{ github.workspace }}/msys64/usr/bin:/usr/bin" &&
-            cd libjit && 
+            cd bison && 
             g++ --version && 
             ./bootstrap && 
             ./configure mingw64 --prefix="$(pwd)/${{ env.installationPath }}" &&
@@ -50,12 +50,12 @@ jobs:
         uses: thedoctor0/zip-release@master
         with:
           type: 'zip'
-          directory: "${{ github.workspace }}/libjit/${{ env.installationPath }}"
+          directory: "${{ github.workspace }}/bison/${{ env.installationPath }}"
           filename: "${{ env.mingwTargetZip }}"
         
       - name: Release prebuilt
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "${{ github.workspace }}/libjit/${{ env.installationPath }}/${{ env.mingwTargetZip }}"
+          artifacts: "${{ github.workspace }}/bison/${{ env.installationPath }}/${{ env.mingwTargetZip }}"
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
