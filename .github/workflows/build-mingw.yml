@@ -35,6 +35,10 @@ jobs:
 #       - name: git clone pkg-config
 #         shell: cmd
 #         run: git clone --recursive https://github.com/dirkarnez/pkg-config-action.git && xcopy /E /H /Y /C "${{ github.workspace }}\pkg-config-action\*" "${{ github.workspace }}\mingw64\bin" && cd /d "${{ github.workspace }}\mingw64\bin" && pkg-config.exe --version
+
+      - name: git submodule update
+        shell: cmd
+        run: cd bison && git submodule update
         
       - name: set PATH, check mingw version, build and install
         shell: msys2 {0}
@@ -42,7 +46,7 @@ jobs:
             export PATH="${{ github.workspace }}/mingw64:${{ github.workspace }}/mingw64/bin:${{ github.workspace }}/msys64/usr/bin:/usr/bin" &&
             cd bison && 
             g++ --version && 
-            ./bootstrap --gnulib-refdir="gnulib" && 
+            ./bootstrap && 
             ./configure mingw64 --prefix="$(pwd)/${{ env.installationPath }}" &&
             make && make install
             
