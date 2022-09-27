@@ -42,7 +42,7 @@ jobs:
             export PATH="${{ github.workspace }}/mingw64:${{ github.workspace }}/mingw64/bin:${{ github.workspace }}/msys64/usr/bin:/usr/bin" &&
             cd bison && 
             g++ --version && 
-            ./bootstrap && 
+            ./bootstrap --gnulib-refdir="gnulib" && 
             ./configure mingw64 --prefix="$(pwd)/${{ env.installationPath }}" &&
             make && make install
             
