@@ -72,7 +72,7 @@ jobs:
           cd ${{ env.libraryName }} && 
           g++ --version && 
           ./configure --help &&
-          ./configure mingw64 --prefix="$(pwd)/${{ env.installationPath }}" &&
+          ./configure --disable-rpath --enable-threads=posix --prefix="$(pwd)/${{ env.installationPath }}" &&
           make && make install
             
       - name: Archive Release
