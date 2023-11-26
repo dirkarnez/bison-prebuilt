@@ -6,21 +6,37 @@ on:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
       - 'c*'
 
+permissions:
+    contents: write
+    
 jobs:
   build:
-    name: Create Release
-    runs-on: windows-2019
+    strategy:
+      matrix:
+        compiler:
+        - {
+            name: "x86_64-8.1.0-release-posix-seh-rt_v6-rev0",
+            url: "https://github.com/dirkarnez/cpp-tools/raw/main/x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z"
+          }
+        - {
+            name: "winlibs-x86_64-posix-seh-gcc-11.2.0-mingw-w64-9.0.0-r1",
+            url: "https://github.com/brechtsanders/winlibs_mingw/releases/download/11.2.0-12.0.1-9.0.0-r1/winlibs-x86_64-posix-seh-gcc-11.2.0-mingw-w64-9.0.0-r1.zip"
+          }
+        # - {
+        #     name: "msvc2019"
+        #   }
+
+ 
+    runs-on: windows-latest
     env:
       libraryName: bison
       installationPath: bison-installation
-      tagName: v3.8.2 # target tag
-      mingwTargetZip: bison-${{ github.ref_name }}-x86_64-posix-seh-rev0-8.1.0.zip
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
-      - name: git clone
-        shell: cmd
-        run: git clone --recurse-submodules https://git.savannah.gnu.org/git/bison.git && cd bison && git checkout ${{ env.tagName }}
+      # - name: git clone
+      #   shell: cmd
+      #   run: git clone --recurse-submodules https://git.savannah.gnu.org/git/bison.git && cd bison && git checkout ${{ env.tagName }}
         
       - name: Install MSYS2
         uses: msys2/setup-msys2@v2
@@ -36,30 +52,35 @@ jobs:
 #         shell: cmd
 #         run: git clone --recursive https://github.com/dirkarnez/pkg-config-action.git && xcopy /E /H /Y /C "${{ github.workspace }}\pkg-config-action\*" "${{ github.workspace }}\mingw64\bin" && cd /d "${{ github.workspace }}\mingw64\bin" && pkg-config.exe --version
 
-      - name: git submodule update
-        shell: cmd
-        run: cd bison && git submodule update
-        
+      - shell: cmd
+        run: curl http://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz -L -O -J
+
+      - shell: cmd
+        run: |
+          .\PortableGit-2.38.1-64-bit\usr\bin\tar.exe -xf bison-3.8.2.tar.xz &&^
+          rename bison-3.8.2 ${{ env.libraryName }}
+          
       - name: set PATH, check mingw version, build and install
         shell: msys2 {0}
         run: |
-            export PATH="${{ github.workspace }}/mingw64:${{ github.workspace }}/mingw64/bin:${{ github.workspace }}/msys64/usr/bin:/usr/bin" &&
-            cd bison && 
-            g++ --version && 
-            ./bootstrap && 
-            ./configure mingw64 --prefix="$(pwd)/${{ env.installationPath }}" &&
-            make && make install
+          workspace=$(pwd) &&
+          export PATH="$workspace/mingw64:$workspace/mingw64/bin:$workspace/msys64/usr/bin:/usr/bin" &&
+          cd ${{ env.libraryName }} && 
+          g++ --version && 
+          ./configure --help &&
+          ./configure mingw64 --prefix="$(pwd)/${{ env.installationPath }}" &&
+          make && make install
             
       - name: Archive Release
         uses: thedoctor0/zip-release@master
         with:
           type: 'zip'
-          directory: "${{ github.workspace }}/bison/${{ env.installationPath }}"
-          filename: "${{ env.mingwTargetZip }}"
+          directory: "${{ env.libraryName }}"
+          filename: "${{ env.libraryName }}-${{ github.ref_name }}-${{ matrix.compiler.name }}.zip"
         
       - name: Release prebuilt
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "${{ github.workspace }}/bison/${{ env.installationPath }}/${{ env.mingwTargetZip }}"
+          artifacts: "${{ env.libraryName }}/${{ env.libraryName }}-${{ github.ref_name }}-${{ matrix.compiler.name }}.zip"
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
